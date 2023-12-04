@@ -1,0 +1,25 @@
+Language: Cpp
+BasedOnStyle: Google
+IndentWidth: 4
+UseTab: Never
+ColumnLimit: 120
+SpaceBeforeParens: Never
+PointerAlignment: Left
+SpacesInParentheses: false
+SpacesInContainerLiterals: true
+SpaceBeforeAssignmentOperators: true
+# SpaceCurlies: true
+NamespaceIndentation: All
+IndentCaseLabels: true
+IndentAccessModifiers: false 
+SortIncludes: false
+# Alignment
+AlignAfterOpenBracket: Align
+AlignConsecutiveMacros: 'true'
+AlignConsecutiveAssignments: 'true'
+AlignConsecutiveDeclarations: 'true'
+AlignSquareBrackets : 'true'
+
+#Allow 
+AllowShortBlocksOnASingleLine: false
+AllowShortFunctionsOnASingleLine: true
