@@ -1,17 +1,11 @@
-project(utils)
+file(GLOB_RECURSE UTILS_SOURCES "src/*.cpp")
 
-add_library(${PROJECT_NAME} SHARED utils.cpp)
+add_library(utils SHARED)
+target_sources(utils PUBLIC ${UTILS_SOURCES})
+target_include_directories(utils PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>  # <prefix>/include/mylib
+)
 
-target_include_directories(utils INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-    $<INSTALL_INTERFACE:include>
-) 
-
-# define the symbol stating we are using the declspec(dllexport) when
-# building on windows
-target_compile_definitions(utils PRIVATE "USING_UTILS")
-
-
-set(installable_libs utils)
-
-install(TARGETS ${installable_libs} DESTINATION lib)
+target_compile_features(utils PUBLIC cxx_std_23)
+add_library(utils::utils ALIAS utils)

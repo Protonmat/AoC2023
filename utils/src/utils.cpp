@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "utils.hpp"
+#include "utils/utils.hpp"
 
 void ReadEntireFileIntoVector(char const* path, std::vector<std::string>& lines) {
     if (!path) {

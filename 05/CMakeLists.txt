@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.27.7)
-project(04)
+project(05)
 
 
 set(CMAKE_CXX_STANDARD 23)
@@ -12,4 +12,4 @@ file(COPY test_input.txt DESTINATION ./)
 
 add_executable(${PROJECT_NAME} main.cpp)
 
-target_link_libraries(04 utils)
+target_link_libraries(05 utils)

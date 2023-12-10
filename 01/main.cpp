@@ -4,38 +4,29 @@
 #include <iostream>
 #include <string>
 
-
 // 53934 is not the answer
 // 53868 is the right answer for the second challenge
 
-constexpr void SetFirstOrLast(size_t value, size_t &first, size_t &last) {
-    if(!first) {
-        last  = value;
-        first = last;
-    } else {
-        last = value;
-    }
-}
-
 size_t getnumbers(std::string &codeLine) {
-    if (codeLine.size() == 0 ) return 0;
-    size_t      first{0}, last{0};
-    std::string numbers[] = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine"};
+    if(codeLine.size() == 0) return 0;
+    size_t              first{0}, last{0};
+    std::string         numbers[] = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine"};
     std::vector<size_t> nums;
     nums.reserve(codeLine.length());
 
     char *ptrLine = codeLine.data();
     while(*ptrLine != '\0') {
         if(*ptrLine > '0' && *ptrLine <= '9') {
-            nums.push_back((size_t) *ptrLine - '0');
+            nums.push_back((size_t)*ptrLine - '0');
             ++ptrLine;
+
         } else {
             auto number{1};
             auto found{false};
-            for(auto &num: numbers) {
-                auto index {0u};
-                while( (ptrLine+index) && index != num.length() && num[index] == *(ptrLine+index)) ++index;
-                if ( num.length() == index) {
+            for(auto &num : numbers) {
+                auto index{0u};
+                while((ptrLine + index) && index != num.length() && num[index] == *(ptrLine + index)) ++index;
+                if(num.length() == index) {
                     nums.push_back(number);
                     ptrLine += index - 1;
                     found = true;
@@ -44,15 +35,14 @@ size_t getnumbers(std::string &codeLine) {
                 ++number;
             }
 
-            if (!found) {
+            if(!found) {
                 ++ptrLine;
             }
         }
-        
     }
 
-    first =  *nums.begin();
-    last  =  * (nums.begin() + (nums.size() - 1));
+    first = *nums.begin();
+    last  = *(nums.begin() + (nums.size() - 1));
 
     return 10 * first + last;
 }
