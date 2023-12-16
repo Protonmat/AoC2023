@@ -131,6 +131,147 @@ auto GetLowestLocationFile = [](std::ifstream &file, size_t reserve_seeds) -> si
     return lowest_location;
 };
 
+std::ostream &operator<<(std::ostream &os, FieldMap &fm) {
+    os << std::format("{} {} {}", fm.destination_, fm.source_, fm.quantity_);
+    return os;
+}
+
+std::string GetNameOfLevel(size_t level) {
+    switch(level) {
+        case 0:
+            return "seed-to-soil:";
+        case 1:
+            return "soil-to-fertilizer:";
+        case 2:
+            return "fertilizer-to-water:";
+        case 3:
+            return "water-to-light:";
+        case 4:
+            return "light-to-temperature:";
+        case 5:
+            return "temperature-to-humidity:";
+        case 6:
+            return "humidity-to-location:";
+        default:
+            return "wtf";
+    }
+}
+
+void SecondSolution(std::map<size_t, std::vector<FieldMap>> &map, FieldMap rhs, size_t &final_result, size_t level = 0);
+
+void SecondSolution(std::map<size_t, std::vector<FieldMap>> &map, FieldMap rhs, size_t &final_result, size_t level) {
+    std::string tabs(level, '\t');
+    // std::cout << tabs << GetNameOfLevel(level) << ", " << rhs << "\n";
+
+    if(level > 6) {
+        if(rhs.source_ < final_result) {
+            std::cout << tabs << "New Final result is : " << rhs.source_ << "\n";
+            final_result = rhs.source_;
+        }
+        // std::cout << tabs << "Max Level reached\n";
+        return;
+    }
+
+    for(auto &field : map[level]) {
+        std::cout << tabs << GetNameOfLevel(level) << ", " << field << "\n";
+
+        size_t a1{0}, a2{0}, b1{0}, b2{0};
+        size_t dest{0};
+        a1 = rhs.source_;
+        a2 = a1 + rhs.quantity_;
+
+        b1   = field.source_;
+        b2   = b1 + field.quantity_;
+        dest = field.destination_;
+
+        std::cout << tabs << std::format("Comparing: {} {}\n", a1, a2);
+        std::cout << tabs << std::format("           {} {}\n", b1, b2);
+        // Ignore out of bounds
+        if(a1 > b2 || a2 < b1) {
+            std::cout << tabs << "Out of bounds\n";
+            continue;
+        }
+
+        /*
+            |----------|
+            |----------|
+            b1 == a1 && b2 == a2
+        */
+
+        if(b1 == a1 && b2 == a2) {
+            std::cout << tabs << "First case\n";
+            rhs.quantity_ = 0;
+            SecondSolution(map, {dest, dest, field.quantity_}, final_result, level + 1);
+            continue;
+        }
+
+        /*
+                    |-----------|
+            |----------|
+            b1 < a1 && b2 < a2
+            first case
+        */
+        if(a1 >= b1 && a2 >= b2) {
+            std::cout << tabs << "Second case\n";
+            rhs.source_   = b2;
+            rhs.quantity_ = a2 - b2;
+            SecondSolution(map, {dest + a1 - b1, dest + a1 - b1, b2 - a1}, final_result, level + 1);
+            // go next
+            continue;
+        }
+
+        /*
+            |----------|
+                |-----------|
+
+            a1 < b1 && a2 < b2
+        */
+
+        if(a1 <= b1 && a2 <= b2) {
+            std::cout << tabs << "third case\n";
+            rhs.quantity_ = b1 - a1;
+            SecondSolution(map, {dest, dest, a2-b1}, final_result, level + 1);
+            // go next
+            continue;
+        }
+
+        /*
+               |----|
+            |----------|
+            a1 > b1 && a2 < b2
+        */
+
+        if(a1 >= b1 && a2 <= b2) {
+            std::cout << tabs << "fourth case\n";
+            FieldMap f{dest + a1 - b1, dest + a1 - b1, rhs.quantity_};
+            SecondSolution(map, f, final_result, level + 1);
+            rhs.quantity_ = 0;
+            // go next
+            continue;
+        }
+
+        /*
+         |----------|
+            |----|
+            a1 <= b1 && a2 >= b2
+        */
+        if(a1 <= b1 && a2 >= b2) {
+            std::cout << tabs << "Fifth case\n";
+            rhs.quantity_ = 0;
+            SecondSolution(map, {dest, dest, b2 - b1}, final_result, level + 1);
+            SecondSolution(map, {a1, a1, b1 - a1}, final_result, level);
+            SecondSolution(map, {b2, b2, a2 - b2}, final_result, level);
+            continue;
+        }
+    }
+
+    // Process the rest
+    std::cout << tabs << "Rest case\n";
+    if(rhs.quantity_ != 0) {
+        SecondSolution(map, rhs, final_result, level + 1);
+    }
+};
+
 auto GetLowestLocationFileSecond = [](std::ifstream &file, size_t reserve_seeds) -> size_t {
     std::vector<Seed>     seeds;
     std::vector<FieldMap> seeds_to_soil;
@@ -157,7 +298,7 @@ auto GetLowestLocationFileSecond = [](std::ifstream &file, size_t reserve_seeds)
     if(file.failbit) {
         file.clear();
     }
-    
+
     std::map<size_t, std::vector<FieldMap>> levels;
 
     file >> seeds_to_soil;
@@ -176,21 +317,18 @@ auto GetLowestLocationFileSecond = [](std::ifstream &file, size_t reserve_seeds)
     levels[5] = temperature_to_humidity;
     levels[6] = humidity_to_location;
 
-    size_t lowest_location{ULLONG_MAX};
+    size_t lowest_location{SIZE_MAX};
 
-    auto Recu = [&levels](size_t n, size_t q, size_t level){
+    // declare a function thats going to be used as a recursive function
+    // Recursive function to solve each intersection into the next level
 
-        if (level == 7) {
-            return;
-        }
-        auto l = levels[level];
-        std::for_each(std::execution::par, begin(l), end(l) , [](FieldMap const& f){
-            
-        });
-    };
-
-
-
+    std::for_each(std::execution::par, begin(seeds), end(seeds), [&levels, &lowest_location](Seed &seed) {
+        std::printf("Seed : %zu - %zu\n", seed.number, seed.amount);
+        // Recu(levels, FieldMap{.destination_ = seed.number, .source_ = seed.number, .quantity_ = seed.amount - 1}, 0,
+        //      lowest_location);
+        SecondSolution(levels, {.destination_ = seed.number, .source_ = seed.number, .quantity_ = seed.amount},
+                       lowest_location, 0);
+    });
 
     return lowest_location;
 };
@@ -200,25 +338,35 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char const *argv[]) {
     constexpr size_t test_seed_count{4};
     constexpr size_t seed_count{20};
 
-    std::ifstream test_file_first("test_input.txt", std::ios::in);
-    std::ifstream file_first("input.txt", std::ios::in);
+    // std::ifstream test_file_first("test_input.txt", std::ios::in);
+    // std::ifstream file_first("input.txt", std::ios::in);
 
-    if(!test_file_first || !file_first) {
-        std::cerr << "Invalid files\n";
-        return 0;
-    }
+    // if(!test_file_first || !file_first) {
+    //     std::cerr << "Invalid files\n";
+    //     return 0;
+    // }
 
     std::ifstream test_file_second("test_input.txt", std::ios::in);
-    std::ifstream file_second("input.txt", std::ios::in);
 
-    size_t location_test_first = GetLowestLocationFile(test_file_first, test_seed_count);
-    size_t location_first      = GetLowestLocationFile(file_first, seed_count);
+    // size_t location_test_first = GetLowestLocationFile(test_file_first, test_seed_count);
+    // size_t location_first      = GetLowestLocationFile(file_first, seed_count);
 
     size_t location_test_second = GetLowestLocationFileSecond(test_file_second, test_seed_count);
-    size_t location_second      = GetLowestLocationFileSecond(file_second, seed_count);
 
-    std::printf("Location Test First: %zu\n", location_test_first);
-    std::printf("Location First: %zu\n", location_first);
+    // std::ifstream file_second("input.txt", std::ios::in);
+    // size_t location_second      = GetLowestLocationFileSecond(file_second, seed_count);
+
+    // std::printf("Location Test First: %zu\n", location_test_first);
+    // std::printf("Location First: %zu\n", location_first);
+
+    std::printf("Location Test Second: %zu\n", location_test_second);
+    // std::printf("Location Second: %zu\n", location_second);
+
+    {
+        std::ifstream file("input.txt", std::ios::in);
+        size_t        location = GetLowestLocationFileSecond(file, 2);
+        std::printf("Location Second: %zu\n", location);
+    }
 
     return 0;
 }
